@@ -8,17 +8,30 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
-#include "stm32f10x.h"
-#include "millisecondtimer.h"
+ 
+#include "stm32f4xx_hal.h"
+//#include "millisecondtimer.h"
 
 #define PI      3.1415926
 #define DEBUG   1
 
-#define IMU_PUBLISH_RATE 50 //hz
-#define BAT_PUBLISH_RATE 0.2 //hz
-#define COMMAND_RATE 50 //hz
-#define DEBUG_RATE 1
+/** LED config**/
+#define LED_RED_Pin GPIO_PIN_11
+#define LED_RED_GPIO_Port GPIOE
+#define LED_GREEN_Pin GPIO_PIN_14
+#define LED_GREEN_GPIO_Port GPIOF
 
+#define LED_GREEN_BAR_GPIO_Port GPIOG
+#define LED_GREEN_BAR_Pin1 GPIO_PIN_1
+#define LED_GREEN_BAR_Pin2 GPIO_PIN_2
+#define LED_GREEN_BAR_Pin3 GPIO_PIN_3
+#define LED_GREEN_BAR_Pin4 GPIO_PIN_4
+#define LED_GREEN_BAR_Pin5 GPIO_PIN_5
+#define LED_GREEN_BAR_Pin6 GPIO_PIN_6
+#define LED_GREEN_BAR_Pin7 GPIO_PIN_7
+#define LED_GREEN_BAR_Pin8 GPIO_PIN_8
+ 
+/** PID param **/
 #define K_P    0.1 // P constant
 #define K_I    0.2 // I constant
 #define K_D    0.2 // D constant
@@ -170,12 +183,7 @@ typedef enum {
 #define RIKI_SERVO2_GPIO_CLK		RCC_APB2Periph_GPIOA
 #define RIKI_SERVO2_TIM				TIM2
 #define RIKI_SERVO2_TIM_CLK			RCC_APB1Periph_TIM2
-
-/** LED config **/
-#define RIKI_LED_PIN								GPIO_Pin_1
-#define RIKI_LED_GPIO_PORT					GPIOC
-#define RIKI_LED_GPIO_CLK						RCC_APB2Periph_GPIOC
-
+ 
 
 /** volt adc config **/
 #define ADC1_DR_ADDRESS         ((u32)0x4001244C)
@@ -184,14 +192,6 @@ typedef enum {
 #define RIKI_BATTERY_GPIO_CLK       RCC_APB2Periph_GPIOC
 #define RIKI_BATTERY_ADC_CLK        RCC_APB2Periph_ADC1
 #define RIKI_BATTERY_DMA_CLK        RCC_AHBPeriph_DMA1
-
-/** Sonar config **/
-#define RIKI_ECHO_PIN               GPIO_Pin_13
-#define RIKI_TRIG_PIN               GPIO_Pin_12
-#define RIKI_SONAR_GPIO_PORT        GPIOB
-#define RIKI_SONAR_GPIO_CLK         RCC_APB2Periph_GPIOB
-#define RIKI_SONAR_TIM              TIM6
-#define RIKI_SONAR_TIM_CLK          RCC_APB1Periph_TIM6
-#define RIKI_SONAR_TIM_IRQ          TIM6_IRQn
+ 
 
 #endif // _CONFIG_H_
