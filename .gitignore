@@ -11,6 +11,13 @@
 *.out
 *.uvoptx
 *.uvguix.riki
+*.axf
+*.crf
+*.sct
+*.map
+*.lnp
+*.htm
+*.dep 
 Listings
 Objects
 DebugConfig
