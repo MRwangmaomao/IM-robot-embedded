@@ -8,30 +8,17 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <math.h>
- 
-#include "stm32f4xx_hal.h"
-//#include "millisecondtimer.h"
+#include "stm32f10x.h"
+#include "millisecondtimer.h"
 
 #define PI      3.1415926
 #define DEBUG   1
 
-/** LED config**/
-#define LED_RED_Pin GPIO_PIN_11
-#define LED_RED_GPIO_Port GPIOE
-#define LED_GREEN_Pin GPIO_PIN_14
-#define LED_GREEN_GPIO_Port GPIOF
+#define IMU_PUBLISH_RATE 50 //hz
+#define BAT_PUBLISH_RATE 0.2 //hz
+#define COMMAND_RATE 50 //hz
+#define DEBUG_RATE 1
 
-#define LED_GREEN_BAR_GPIO_Port GPIOG
-#define LED_GREEN_BAR_Pin1 GPIO_PIN_1
-#define LED_GREEN_BAR_Pin2 GPIO_PIN_2
-#define LED_GREEN_BAR_Pin3 GPIO_PIN_3
-#define LED_GREEN_BAR_Pin4 GPIO_PIN_4
-#define LED_GREEN_BAR_Pin5 GPIO_PIN_5
-#define LED_GREEN_BAR_Pin6 GPIO_PIN_6
-#define LED_GREEN_BAR_Pin7 GPIO_PIN_7
-#define LED_GREEN_BAR_Pin8 GPIO_PIN_8
- 
-/** PID param **/
 #define K_P    0.1 // P constant
 #define K_I    0.2 // I constant
 #define K_D    0.2 // D constant
@@ -39,8 +26,8 @@
 
 /** motor param **/
 #define PWM_BITS        8
-#define MAX_RPM         280 //motor's maximum RPM 366
-#define COUNTS_PER_REV  469 //wheel encoder's no of ticks per rev(gear_ratio * pulse_per_rev)
+#define MAX_RPM         280 //motor's maximum RPM 366 电机最大转速
+#define COUNTS_PER_REV  469 //wheel encoder's no of ticks per rev(gear_ratio * pulse_per_rev) 轮子每转一圈的脉冲数
 #define WHEEL_DIAMETER  0.065 //wheel's diameter in meters
 
 #define LR_WHEELS_DISTANCE 0
@@ -68,6 +55,7 @@ typedef enum {
 
 #define SERIALn							3
 
+//PA9 TX PA10 RX
 #define RIKI_SERIAL1					USART1
 #define RIKI_SERIAL1_IRQ				USART1_IRQn
 #define RIKI_SERIAL1_CLK             	RCC_APB2Periph_USART1
@@ -77,6 +65,7 @@ typedef enum {
 #define RIKI_SERIAL1_RX_PIN             GPIO_Pin_10
 #define RIKI_SERIAL1_NVIC				1
 
+//PA2 TX PA3 RX
 #define RIKI_SERIAL2					USART2
 #define RIKI_SERIAL2_IRQ				USART2_IRQn
 #define RIKI_SERIAL2_CLK             	RCC_APB1Periph_USART2
@@ -86,6 +75,7 @@ typedef enum {
 #define RIKI_SERIAL2_RX_PIN             GPIO_Pin_3
 #define RIKI_SERIAL2_NVIC				2
 
+//PB10 TX PB11 RX
 #define RIKI_SERIAL3									USART3
 #define RIKI_SERIAL3_IRQ							USART3_IRQn
 #define RIKI_SERIAL3_CLK             	RCC_APB1Periph_USART3
@@ -102,57 +92,18 @@ typedef enum {
 	MOTOR_END = 2
 }Motor_TypeDef; 
 
-#define MOTORn							2
-#define RIKI_MOTOR1_A_PIN           GPIO_Pin_5
-#define RIKI_MOTOR1_B_PIN           GPIO_Pin_4
-#define RIKI_MOTOR1_GPIO_PORT       GPIOA
-#define RIKI_MOTOR1_GPIO_CLK        RCC_APB2Periph_GPIOA
-
-#define RIKI_MOTOR2_A_PIN           GPIO_Pin_5
-#define RIKI_MOTOR2_B_PIN           GPIO_Pin_4
-#define RIKI_MOTOR2_GPIO_PORT       GPIOC
-#define RIKI_MOTOR2_GPIO_CLK        RCC_APB2Periph_GPIOC
-
-#define RIKI_MOTOR1_PWM_PIN         GPIO_Pin_6
-#define RIKI_MOTOR1_PWM_PORT        GPIOA
-#define RIKI_MOTOR1_PWM_CLK         RCC_APB2Periph_GPIOA
-#define RIKI_MOTOR1_PWM_TIM         TIM3
-#define RIKI_MOTOR1_PWM_TIM_CLK     RCC_APB1Periph_TIM3
-
-#define RIKI_MOTOR2_PWM_PIN         GPIO_Pin_7
-#define RIKI_MOTOR2_PWM_PORT        GPIOA
-#define RIKI_MOTOR2_PWM_CLK         RCC_APB2Periph_GPIOA
-#define RIKI_MOTOR2_PWM_TIM         TIM3
-#define RIKI_MOTOR2_PWM_TIM_CLK     RCC_APB1Periph_TIM3
+ 
 
 
 /** Encoder config **/
 typedef enum {
 	ENCODER1 = 0,
 	ENCODER2 = 1,
+	ENCODER3 = 0,
+	ENCODER4 = 1,
 	ENCODER_END = 2
 }Encoder_TypeDef; 
-
-#define ENCODERn 					2
-
-#define ENCODERn                    2
-
-#define RIKI_ENCODER2_A_PIN         GPIO_Pin_0
-#define RIKI_ENCODER2_B_PIN         GPIO_Pin_1
-#define RIKI_ENCODER2_GPIO_PORT     GPIOA
-#define RIKI_ENCODER2_GPIO_CLK      RCC_APB2Periph_GPIOA
-
-#define RIKI_ENCODER1_A_PIN         GPIO_Pin_6
-#define RIKI_ENCODER1_B_PIN         GPIO_Pin_7
-#define RIKI_ENCODER1_GPIO_PORT     GPIOB
-#define RIKI_ENCODER1_GPIO_CLK      RCC_APB2Periph_GPIOB
-
-#define RIKI_ENCODER2_TIM           TIM5
-#define RIKI_ENCODER2_TIM_CLK       RCC_APB1Periph_TIM5
-
-#define RIKI_ENCODER1_TIM           TIM4
-#define RIKI_ENCODER1_TIM_CLK       RCC_APB1Periph_TIM4
-
+ 
 
 /** I2C Config **/
 
@@ -161,37 +112,28 @@ typedef enum {
 #define RIKI_I2C_GPIO_PORT          GPIOB
 #define RIKI_I2C_GPIO_CLK           RCC_APB2Periph_GPIOB
 
-
-/** Servo Config **/
-typedef enum {
-	SERVO1 = 0,
-	SERVO2 = 1,
-	SERVO_END = 2
-}Servo_TypeDef; 
-
-#define SERVOn 					2
-#define MAX_ANGLE				270
-
-#define RIKI_SERVO1_PIN				GPIO_Pin_2
-#define RIKI_SERVO1_GPIO_PORT		GPIOA
-#define RIKI_SERVO1_GPIO_CLK		RCC_APB2Periph_GPIOA
-#define RIKI_SERVO1_TIM				TIM2
-#define RIKI_SERVO1_TIM_CLK			RCC_APB1Periph_TIM2
-
-#define RIKI_SERVO2_PIN				GPIO_Pin_3
-#define RIKI_SERVO2_GPIO_PORT		GPIOA
-#define RIKI_SERVO2_GPIO_CLK		RCC_APB2Periph_GPIOA
-#define RIKI_SERVO2_TIM				TIM2
-#define RIKI_SERVO2_TIM_CLK			RCC_APB1Periph_TIM2
  
 
+/** LED config **/
+#define RIKI_LED_PIN								GPIO_Pin_15
+#define RIKI_LED_GPIO_PORT					GPIOG
+#define RIKI_LED_GPIO_CLK						RCC_APB2Periph_GPIOG
+ 
 /** volt adc config **/
+#define Voltage_Threshold 47.3000
 #define ADC1_DR_ADDRESS         ((u32)0x4001244C)
 #define RIKI_BATTERY_PIN        GPIO_Pin_0
 #define RIKI_BATTERY_GPIO_PORT      GPIOC
 #define RIKI_BATTERY_GPIO_CLK       RCC_APB2Periph_GPIOC
 #define RIKI_BATTERY_ADC_CLK        RCC_APB2Periph_ADC1
 #define RIKI_BATTERY_DMA_CLK        RCC_AHBPeriph_DMA1
+
+/** Bumper config**/
+#define RIKI_BUMPER_FRONT_PIN        GPIO_Pin_2 
  
+#define RIKI_BUMPER_BACK_PIN        GPIO_Pin_3 
+ 
+#define RIKI_BUMPER_GPIO_PORT      GPIOE
+#define RIKI_BUMPER_GPIO_CLK       RCC_APB2Periph_GPIOE
 
 #endif // _CONFIG_H_

@@ -14,7 +14,8 @@ const uint16_t  SERILA_NVIC[SERIALn] = {RIKI_SERIAL1_NVIC, RIKI_SERIAL2_NVIC, RI
 HardwareSerial::HardwareSerial(Serial_TypeDef _Serial)
 {
 		Serial = _Serial;
-
+		distance_sonar_i = 0;
+		sonar_update_flag = false;
 		if(this->Serial == SERIAL1)
 			Serial1 = this;
 		if(this->Serial == SERIAL2)
@@ -125,3 +126,19 @@ void HardwareSerial::irq()
 	}
 }
 
+void HardwareSerial::sonar_irq()
+{
+	uint8_t data;
+	
+	if (USART_GetITStatus(SERIAL_USART[Serial], USART_IT_RXNE) != RESET) {
+		data = USART_ReceiveData(SERIAL_USART[Serial]); 
+		if(data == 0xCB)
+		{
+			distance_sonar_i = 0;
+			sonar_update_flag = true;
+		}
+		distance_buffer[distance_sonar_i] = data;
+		distance_sonar_i++;
+		USART_ClearITPendingBit(SERIAL_USART[Serial], USART_IT_RXNE);    
+	}
+}

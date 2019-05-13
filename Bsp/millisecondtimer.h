@@ -3,8 +3,8 @@ extern "C" {
 #endif
 #ifndef _MILLISECONDTIMER_H_
 #define _MILLISECONDTIMER_H_
-//include "stm32f10x.h"
-#include "stm32f4xx_hal.h"
+#include "stm32f10x.h"
+
 void initialise(void);
 void delay(uint32_t millis_);
 uint32_t millis(void);

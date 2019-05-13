@@ -1,4 +1,5 @@
 #include "interrupt.h"
+#include "sonar.h" 
 
 #ifdef  USE_SERIAL1
 HardwareSerial *Serial1=0 ;
@@ -22,7 +23,7 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void) 
 {
 #ifdef  USE_SERIAL2
-		Serial2->irq();
+		Serial2->sonar_irq(); 
 #endif
 }
 

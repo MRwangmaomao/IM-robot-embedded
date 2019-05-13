@@ -6,6 +6,9 @@
 
 class HardwareSerial {
 public:
+	int distance_sonar_i;
+	uint8_t distance_buffer[7];
+	bool sonar_update_flag;
 	HardwareSerial(Serial_TypeDef _Serial=SERIAL1);
 	~HardwareSerial(){};
 	void begin(uint32_t baud);
@@ -17,9 +20,10 @@ public:
 	void print(const char *format, ...);
 	void putstr(const char *str);
 	void irq();
-
-protected:
-	RingBuffer rx_buffer;
+	void sonar_irq();
+		
+protected: 
+	RingBuffer rx_buffer; 
 	Serial_TypeDef Serial;
 };
 
